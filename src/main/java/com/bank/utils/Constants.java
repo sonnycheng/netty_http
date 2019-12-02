@@ -10,8 +10,6 @@ public interface Constants {
 	 
 	 public String NO_HANDER_URL = "/favicon.ico";
 	 
-	 // public String PROJECT_LOCATION = "D:/workspace2/SpringBootonNetty/src/main/resources/static/";
+	 public String URL_AHEAD  ="http://";
 	 
-	 
-
 }

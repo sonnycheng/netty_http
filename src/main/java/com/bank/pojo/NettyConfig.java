@@ -7,6 +7,8 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "netty")
 public class NettyConfig {
 	
+	public String host;
+	
 	public Integer port;
 	
 	//读取yml中配置 	
@@ -17,6 +19,14 @@ public class NettyConfig {
 	private boolean keepAlive;
 	 	
 	private int backlog;
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
+	}
 
 	public Integer getPort() {
 		return port;
@@ -56,6 +66,5 @@ public class NettyConfig {
 
 	public void setBacklog(int backlog) {
 		this.backlog = backlog;
-	}
-
+	}	
 }

@@ -28,8 +28,7 @@ public class PageController extends BaseController{
 	@RequestMapping("/page")
 	public ModelAndView  redirect(String username,String pwd){
 						
-		ModelAndView mv = new ModelAndView();
-		// mv.addObject("key", "netty");		
+		ModelAndView mv = new ModelAndView();	
 		mv.setViewName("redirect:/hello.html");
 		 
 		return mv;

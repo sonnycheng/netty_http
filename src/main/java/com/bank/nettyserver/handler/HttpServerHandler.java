@@ -121,9 +121,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
 	            //HTTP请求 GET/POST
 	            MockHttpServletResponse servletResponse = new MockHttpServletResponse();	                			
 	            MockHttpServletRequest servletRequest = assembleHttpRequest(ctx, fullHttpRequest);
-	            	          	            
-	            System.out.println("context path:"+servletRequest.getContextPath());
-	            	           
+	            	          	            	          	            	           
 	            // 耗时任务 
 	            ctx.executor().submit(new HttpThread(servlet,servletRequest,servletResponse){
 	            	@Override
@@ -166,7 +164,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
 	                        	}
 	                        }else if(status.equals(HttpResponseStatus.FOUND)) {
 	                        	//  重定向
-	                        	String newUri = "http://localhost:"+ nettyConfig.getPort().toString()+servletResponse.getRedirectedUrl();
+	                        	String newUri = Constants.URL_AHEAD + nettyConfig.getHost()+":"+ nettyConfig.getPort().toString()+servletResponse.getRedirectedUrl();
 	                        	logger.info("newUri:"+newUri);
 	                            response.headers().set(HttpHeaders.Names.LOCATION, newUri);           		                        
 	                        }else {	                        	
@@ -326,9 +324,7 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<FullHttpReque
             List<InterfaceHttpData> postData = decoder.getBodyHttpDatas(); //
             for(InterfaceHttpData data:postData){
                 if (data.getHttpDataType() == HttpDataType.Attribute) {  
-                    MemoryAttribute attribute = (MemoryAttribute) data;  
-                    System.out.println("name in getRequestParams:"+attribute.getName());
-                    System.out.println("value in getRequestParams:"+attribute.getValue());
+                    MemoryAttribute attribute = (MemoryAttribute) data;                     
                     requestParams.put(attribute.getName(), attribute.getValue());
                 }
             }

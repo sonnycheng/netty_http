@@ -62,22 +62,18 @@ public class WebContextInit implements ApplicationContextAware{
 			RequestMappingInfo info = m.getKey();  
             HandlerMethod method = m.getValue();  
             PatternsRequestCondition p = info.getPatternsCondition();  
-            for (String url : p.getPatterns()) { 
-            	System.out.println("url:"+url);
+            for (String url : p.getPatterns()) {           	
             	int num = StringUtils.countMatches(url, "/");
                 if(num>2){
-               	   url = url.substring(0, url.lastIndexOf("/"));
-               	   System.out.println("url2:"+url);
+               	   url = url.substring(0, url.lastIndexOf("/"));              	   
                 }
             	map1.put("url", url);
             	set.add(url);
             	
             }  
-            map1.put("className", method.getMethod().getDeclaringClass().getName()); // 类名  
-            System.out.println("className:"+method.getMethod().getDeclaringClass().getName());
+            map1.put("className", method.getMethod().getDeclaringClass().getName()); // 类名             
             map1.put("method", method.getMethod().getName()); // 方法名 
-            System.out.println("method:"+method.getMethod().getName());
-            
+                      
             RequestMethodsRequestCondition methodsCondition = info.getMethodsCondition();
             for (RequestMethod requestMethod : methodsCondition.getMethods()) {
             	map1.put("type", requestMethod.toString());
@@ -153,6 +149,4 @@ public class WebContextInit implements ApplicationContextAware{
         }
         **/
     }
-	
-
 }

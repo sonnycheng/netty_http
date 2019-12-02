@@ -47,6 +47,7 @@ mybatis:
   type-aliases-package: com.bank.pojo  # 注意：对应实体类的路径
   
 netty:
+    host: 127.0.0.1
     port: 6012
     bossCount: 1
     workCount: 10

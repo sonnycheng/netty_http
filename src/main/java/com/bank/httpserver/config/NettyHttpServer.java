@@ -2,16 +2,14 @@ package com.bank.httpserver.config;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
+
+import java.net.InetSocketAddress;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +21,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.DispatcherServlet;
 
 import com.bank.nettyserver.HttpServerInitializer;
-import com.bank.nettyserver.handler.HttpServerHandler;
 import com.bank.pojo.NettyConfig;
 
 
@@ -33,11 +30,7 @@ public class NettyHttpServer implements ApplicationListener<ApplicationStartedEv
     private static final Logger logger = LoggerFactory.getLogger(NettyHttpServer.class);
     
     @Autowired
-    private  NettyConfig nettyConfig;
-
-    // @Resource
-    // private InterceptorHandler interceptorHandler;
-    
+    private  NettyConfig nettyConfig;   
    
     @Override
     public void onApplicationEvent(@NonNull ApplicationStartedEvent event) {
@@ -62,8 +55,10 @@ public class NettyHttpServer implements ApplicationListener<ApplicationStartedEv
 					.childHandler(new HttpServerInitializer(servlet,businessGroup))
 					.option(ChannelOption.SO_BACKLOG, nettyConfig.getBacklog())
 					.childOption(ChannelOption.SO_KEEPALIVE, true);
+			
+			System.out.println("host:"+nettyConfig.getHost());
 
-            ChannelFuture channelFuture = bootstrap.bind(port).sync().addListener(future -> {
+            ChannelFuture channelFuture = bootstrap.bind(new InetSocketAddress(nettyConfig.getHost(), port)).sync().addListener(future -> {
             String logBanner = "\n\n" +
                     "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n" +
                     "*                                                                                   *\n" +
