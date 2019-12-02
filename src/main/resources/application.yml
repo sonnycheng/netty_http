@@ -1,0 +1,54 @@
+server:
+  port: 8084
+  context-path: /
+
+spring:
+  druid:
+  datasource:
+      type: com.alibaba.druid.pool.DruidDataSource
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      # 初始化时建立物理连接的个数
+      initialSize: 5
+      # 最小连接池数量
+      minIdle: 5
+      # 最大连接池数量
+      maxActive: 20
+      # 获取连接时最大等待时间
+      maxWait: 60000
+      timeBetweenEvictionRunsMillis: 60000
+      minEvictableIdleTimeMillis: 300000
+      validationQuery: SELECT 1 FROM DUAL
+      testWhileIdle: true
+      testOnBorrow: true
+      testOnReturn: true
+      poolPreparedStatements: true
+      maxPoolPreparedStatementPerConnectionSize: 20
+      filters: stat,wall,log4j
+      connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000
+      useGlobalDataSourceStat: true
+      loginUsername: monitor
+      loginPassword: monitor
+      #数据库连接地址   
+      url: jdbc:mysql://127.0.0.1:3306/nettytest?useUnicode=true&allowMultiQueries=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&useSSL=false
+      #用户名
+      username: root
+      #密码
+      password: 123456
+  thymeleaf:
+   cache: false
+   prefix: classpath:/templates/
+   suffix: .html
+   encoding: UTF-8
+   content-type: text/html
+   mode: HTML
+   
+mybatis:
+  mapper-locations: classpath:mapper/*.xml  #注意：一定要对应mapper映射xml文件的所在路径
+  type-aliases-package: com.bank.pojo  # 注意：对应实体类的路径
+  
+netty:
+    port: 6012
+    bossCount: 1
+    workCount: 10
+    keepAlive: true
+    backlog: 128
