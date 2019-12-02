@@ -6,7 +6,16 @@
 
 2). 支持 静态页面，thymeleaf 模板引擎, forward 和 Redirect；
 
-3). Netty IO 线程和 业务线程分离；
+3). Netty IO 线程和 业务线程分离, 可以支持后台 数据库操作；
+
+
+Spring boot 项目已 web(WebApplicationType.NONE) 方式运行， 通过 spring-servlet.xml 文件产生 DispatcherServlet，
+将其 注入 Netty hander pipeline 中，处理后续的 controller。 ( 这也是唯一的遗憾的地方，目前尚 没有通过 MOck 或者 
+application.yml 获得 DispatcherServlet)
+
+springboot 后续的 controller 无需任何改动， 执行 get, post， 普通参数， 表单等多种方式的提交。
+ 
+
 
 
 
