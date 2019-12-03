@@ -15,6 +15,8 @@ public class NettyConfig {
 	private int bossCount;
 	 	
 	private int workerCount;
+	
+	private int businessCount;
 	 
 	private boolean keepAlive;
 	 	
@@ -52,6 +54,14 @@ public class NettyConfig {
 		this.workerCount = workerCount;
 	}
 
+	public int getBusinessCount() {
+		return businessCount;
+	}
+
+	public void setBusinessCount(int businessCount) {
+		this.businessCount = businessCount;
+	}
+
 	public boolean isKeepAlive() {
 		return keepAlive;
 	}
@@ -66,5 +76,7 @@ public class NettyConfig {
 
 	public void setBacklog(int backlog) {
 		this.backlog = backlog;
-	}	
+	}
+
+	
 }

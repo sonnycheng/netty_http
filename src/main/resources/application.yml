@@ -48,8 +48,9 @@ mybatis:
   
 netty:
     host: 127.0.0.1
-    port: 6012
+    port: 8024
     bossCount: 1
-    workCount: 10
+    workerCount: 10
+    businessCount: 10
     keepAlive: true
     backlog: 128

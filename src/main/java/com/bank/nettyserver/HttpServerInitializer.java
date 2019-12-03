@@ -12,7 +12,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 
 import org.springframework.web.servlet.DispatcherServlet;
 
-import com.bank.nettyserver.handler.HttpServerHandler;
+import com.bank.nettyserver.handler.HttpProtocolHandler;
 
 
 public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
@@ -41,7 +41,7 @@ public class HttpServerInitializer extends ChannelInitializer<SocketChannel> {
 		// 支持异步发送大的码流(大的文件传输),但不占用过多的内存，防止java内存溢出
 		pipeline.addLast("chunkedWriter", new ChunkedWriteHandler());
         pipeline.addLast("deflater", new HttpContentCompressor());
-        pipeline.addLast(businessGroup, "handler", new HttpServerHandler(servlet));
+        pipeline.addLast(businessGroup, "handler", new HttpProtocolHandler(servlet));
 	}
 	
 }

@@ -11,6 +11,8 @@ import java.util.Set;
 import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -27,6 +29,8 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 public class WebContextInit implements ApplicationContextAware{
+	
+	private static final Logger logger = LoggerFactory.getLogger(WebContextInit.class);
 	
 	public static Set<String>  urlSet;
 		
@@ -62,18 +66,22 @@ public class WebContextInit implements ApplicationContextAware{
 			RequestMappingInfo info = m.getKey();  
             HandlerMethod method = m.getValue();  
             PatternsRequestCondition p = info.getPatternsCondition();  
-            for (String url : p.getPatterns()) {           	
+            for (String url : p.getPatterns()) { 
+            	logger.info("url:"+url);
             	int num = StringUtils.countMatches(url, "/");
                 if(num>2){
-               	   url = url.substring(0, url.lastIndexOf("/"));              	   
+               	   url = url.substring(0, url.lastIndexOf("/"));
+               	   logger.info("url2:"+url);
                 }
             	map1.put("url", url);
             	set.add(url);
             	
             }  
-            map1.put("className", method.getMethod().getDeclaringClass().getName()); // 类名             
+            map1.put("className", method.getMethod().getDeclaringClass().getName()); // 类名  
+            // logger.info("className:"+method.getMethod().getDeclaringClass().getName());
             map1.put("method", method.getMethod().getName()); // 方法名 
-                      
+            // logger.info("method:"+method.getMethod().getName());
+            
             RequestMethodsRequestCondition methodsCondition = info.getMethodsCondition();
             for (RequestMethod requestMethod : methodsCondition.getMethods()) {
             	map1.put("type", requestMethod.toString());
@@ -149,4 +157,6 @@ public class WebContextInit implements ApplicationContextAware{
         }
         **/
     }
+	
+
 }

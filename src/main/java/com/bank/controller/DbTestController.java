@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.alibaba.fastjson.JSONObject;
-import com.bank.nettyserver.handler.HttpServerHandler;
+import com.bank.nettyserver.handler.HttpProtocolHandler;
 import com.bank.pojo.User;
 import com.bank.service.IUserService;
 import com.bank.utils.StringUtil;

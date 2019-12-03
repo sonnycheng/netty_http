@@ -39,12 +39,13 @@ public class NettyHttpServer implements ApplicationListener<ApplicationStartedEv
     	WebContextInit.getUrlSet(servlet.getWebApplicationContext());
     	
     	int port = nettyConfig.getPort();
-    	System.out.println("port:"+port);
+    	logger.info("Netty config host:"+nettyConfig.getHost()+",config port:"+port+"\n" +
+    			",worker thread:"+nettyConfig.getWorkerCount()+ ",business thread:"+nettyConfig.getBusinessCount());
     	
     	EventLoopGroup bossGroup = new NioEventLoopGroup();
-		EventLoopGroup workerGroup = new NioEventLoopGroup();
+		EventLoopGroup workerGroup = new NioEventLoopGroup(nettyConfig.getWorkerCount());
 		// 业务线程池
-		EventExecutorGroup businessGroup = new DefaultEventExecutorGroup(10);
+		EventExecutorGroup businessGroup = new DefaultEventExecutorGroup(nettyConfig.getBusinessCount());
 		
 		try {
 			ServerBootstrap bootstrap = new ServerBootstrap();
@@ -54,16 +55,14 @@ public class NettyHttpServer implements ApplicationListener<ApplicationStartedEv
 					.channel(NioServerSocketChannel.class)
 					.childHandler(new HttpServerInitializer(servlet,businessGroup))
 					.option(ChannelOption.SO_BACKLOG, nettyConfig.getBacklog())
-					.childOption(ChannelOption.SO_KEEPALIVE, true);
-			
-			System.out.println("host:"+nettyConfig.getHost());
+					.childOption(ChannelOption.SO_KEEPALIVE, true);			
 
             ChannelFuture channelFuture = bootstrap.bind(new InetSocketAddress(nettyConfig.getHost(), port)).sync().addListener(future -> {
             String logBanner = "\n\n" +
                     "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n" +
                     "*                                                                                   *\n" +
                     "*                                                                                   *\n" +
-                    "*                   Netty Http Server started on port {}.                         *\n" +
+                    "*                   Netty Http Server started on port {}.                           *\n" +
                     "*                                                                                   *\n" +
                     "*                                                                                   *\n" +
                     "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *\n";
