@@ -10,10 +10,10 @@
 
 
 Spring boot 项目已 web(WebApplicationType.NONE) 方式运行， 通过 spring-servlet.xml 文件产生 DispatcherServlet，
-将其 注入 Netty hander pipeline 中，处理后续的 controller。 ( 这也是唯一的遗憾的地方，目前尚 没有通过 Mock 或者 
-application.yml 获得 DispatcherServlet)
+将其 注入 Netty hander pipeline 中，处理后续的 controller。 ( 这也是 不理想的地方，目前尚 没有通过 Mock application.yml 获得 DispatcherServlet,
+后续再努力)
 
-springboot 后续的 controller 无需任何改动， 支持 get, post， 普通参数， 表单等多种方式的提交。
+springboot 的 controller 无需任何改动， 支持 get, post， 普通参数， 表单等多种方式的提交。
  
 
 
