@@ -20,9 +20,7 @@ public class TaskTimeController extends BaseController{
 	@RequestMapping("/taketime")
 	@ResponseBody
 	public String taketime(String username,String pwd){
-		
-		logger.info("taketime thread name:"+Thread.currentThread().getName());
-		
+				
 		try {
 			Thread.sleep(1000*30);
 		} catch (InterruptedException e) {			
@@ -36,7 +34,30 @@ public class TaskTimeController extends BaseController{
 		loginResult.put("sex", "girl");
 		
 		resultJson.put("code", 200);
-		resultJson.put("msg", "登录成功");
+		resultJson.put("msg", "耗时正常返回");
+		resultJson.put("result", loginResult);
+		
+		return JSONObject.toJSONString(resultJson);
+	}
+	
+	@RequestMapping("/takelongtime")
+	@ResponseBody
+	public String takelongtime(String username,String pwd){
+			
+		try {
+			Thread.sleep(1000*60);
+		} catch (InterruptedException e) {			
+			e.printStackTrace();
+		}
+		
+		JSONObject resultJson = new JSONObject();
+		Map<String, String> loginResult = new HashMap<String, String>();
+		loginResult.put("username", username);
+		loginResult.put("age", "24");
+		loginResult.put("sex", "girl");
+		
+		resultJson.put("code", 200);
+		resultJson.put("msg", "1分钟耗时正常返回");
 		resultJson.put("result", loginResult);
 		
 		return JSONObject.toJSONString(resultJson);

@@ -25,12 +25,10 @@ import io.netty.handler.codec.http.multipart.MemoryAttribute;
 import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
-import io.netty.util.ReferenceCountUtil;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -40,39 +38,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import com.bank.httpserver.config.WebContextInit;
-import com.bank.pojo.NettyConfig;
-import com.bank.thread.HttpThread;
 import com.bank.utils.Constants;
 import com.bank.utils.StringUtil;
 import com.bank.utils.ThymeleafUtil;
 
 //@ChannelHandler.Sharable(有多个IO线程操作，有多线程的问题，不宜共享)
-@Component
 public class HttpProtocolHandler extends SimpleChannelInboundHandler<FullHttpRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpProtocolHandler.class);
-    
-    @Autowired
-    private  NettyConfig nettyConfig;
-              
+                
     private final DispatcherServlet servlet;
     private final ServletContext servletContext;
         
@@ -90,30 +78,31 @@ public class HttpProtocolHandler extends SimpleChannelInboundHandler<FullHttpReq
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest fullHttpRequest) throws Exception {
     	   
-    	 logger.info("thread name:"+Thread.currentThread().getName());	        	
+    	 logger.info("http hander thread name:"+Thread.currentThread().getName());	        	
     	 String uri = fullHttpRequest.getUri();
     	 logger.info("uri:"+uri);
          if(uri.equals(Constants.NO_HANDER_URL)){
          	 return;
          }                   
-         
-         Set<String>  urlSet =WebContextInit.getUrlSet(servlet.getWebApplicationContext());
-         int num = StringUtils.countMatches(uri, "/");
-         if(num>2){
-        	 uri = uri.substring(0, uri.lastIndexOf("/"));
-         }
-
-         if(!urlSet.contains(uri)){
-        	 logger.info("not in serrvice! ");
-        	 String newUri= Constants.NO_PAGE;
-        	 handerStaticPage(ctx, fullHttpRequest, newUri);
-         }
+                
                
         // 处理静态页面
         if(uri.endsWith(".html")||uri.endsWith(".css")||uri.endsWith(".js")||uri.endsWith(".jpg")){
         	handerStaticPage(ctx, fullHttpRequest, uri);
         	
         }else{
+        	
+        	Set<String>  urlSet =WebContextInit.getUrlSet(servlet.getWebApplicationContext());
+            int num = StringUtils.countMatches(uri, "/");
+            if(num>2){
+           	 uri = uri.substring(0, uri.lastIndexOf("/"));
+            }
+
+            if(!urlSet.contains(uri)){
+           	  logger.info("not in serrvice! ");
+           	  String newUri= Constants.NO_PAGE;
+           	  handerStaticPage(ctx, fullHttpRequest, newUri);
+            }
     	
 	    	boolean flag = HttpMethod.POST.equals(fullHttpRequest.getMethod())
 	                || HttpMethod.GET.equals(fullHttpRequest.getMethod());
@@ -122,77 +111,70 @@ public class HttpProtocolHandler extends SimpleChannelInboundHandler<FullHttpReq
 	            //HTTP请求 GET/POST
 	            MockHttpServletResponse servletResponse = new MockHttpServletResponse();	                			
 	            MockHttpServletRequest servletRequest = assembleHttpRequest(ctx, fullHttpRequest);	           	            
-	            	          	            	          	            	           
+	            
+	            servlet.service(servletRequest, servletResponse);
+	            HttpResponseStatus status = HttpResponseStatus.valueOf(servletResponse.getStatus());		            			            			
+	            String result = servletResponse.getContentAsString();                        
+                result = StringUtils.isEmpty(result)?"":result;   
+                String forwardUrl = servletResponse.getForwardedUrl();
+                
+                FullHttpResponse response = null;
+                
+                if(null!=forwardUrl&&(!"default".equals(forwardUrl))){
+                	
+                	if(forwardUrl.endsWith(".html")){
+                		// 返回动态 页面
+                			                        		
+                		String viewName = forwardUrl.substring(forwardUrl.lastIndexOf("/")+1, forwardUrl.indexOf(".html"));	  
+                		String result2 =  ThymeleafUtil.handlerThymeleafPage(viewName,servletRequest,servletResponse);
+                    	response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,Unpooled.copiedBuffer(result2,CharsetUtil.UTF_8));
+                        response.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/html; charset=UTF-8");	                        		
+                		
+                	}else{
+                        // forward to action
+                        servletRequest.setRequestURI(forwardUrl);
+        	            servletRequest.setServletPath(forwardUrl);			        	           
+        	
+                        MockHttpServletResponse servletResponse2 = new MockHttpServletResponse();
+                        servlet.service(servletRequest, servletResponse2);
+                    	HttpResponseStatus status2 = HttpResponseStatus.valueOf(servletResponse.getStatus());	                        
+                        String result2 = servletResponse2.getContentAsString();                        
+                        result2 = StringUtils.isEmpty(result2)?"":result2;
+                        response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status2,Unpooled.copiedBuffer(result2,CharsetUtil.UTF_8));
+                        response.headers().set("Content-Type", "text/json;charset=UTF-8");
+                        response.headers().set("Content-Length", Integer.valueOf(response.content().readableBytes()));
+                	}
+                }else if(status.equals(HttpResponseStatus.FOUND)) {
+                	//  重定向                       	
+                	String newUri = Constants.URL_AHEAD + Constants.HOST+":"+ Constants.PORT+servletResponse.getRedirectedUrl();
+                	logger.info("newUri:"+newUri);
+                	response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,Unpooled.copiedBuffer("",CharsetUtil.UTF_8));
+                    response.headers().set(HttpHeaders.Names.LOCATION, newUri);           		                        
+                }else {	                        	
+                	
+                	// 返回 json 数据	                        	
+                	response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,Unpooled.copiedBuffer(result,CharsetUtil.UTF_8));
+                	response.headers().set("Content-Type", "text/json;charset=UTF-8");
+                	response.headers().set("Content-Length", Integer.valueOf(response.content().readableBytes()));
+                }
+                		                    	                        
+                response.headers().set("Access-Control-Allow-Origin", "*");
+                response.headers().set("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With,X-File-Name");
+                response.headers().set("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");                       
+                response.headers().set("Connection", "keep-alive");             
+                
+                ChannelFuture writeFuture = ctx.writeAndFlush(response);
+                writeFuture.addListener(ChannelFutureListener.CLOSE);
+	            
+	            
 	            // 耗时任务 
+                /**
 	            ctx.executor().submit(new HttpThread(servlet,servletRequest,servletResponse){
 	            	@Override
-	        	    public void run() {
-	            		
-	            		logger.info("executor thread name:"+Thread.currentThread().getName());	        	       
-	            		try {         				            			
-	            			servlet.service(servletRequest, servletResponse);	            				            			
-	            			HttpResponseStatus status = HttpResponseStatus.valueOf(servletResponse.getStatus());		            			            			
-	                        String forwardUrl = servletResponse.getForwardedUrl();
-	                        String result = servletResponse.getContentAsString();                        
-	                        result = StringUtils.isEmpty(result)?"":result;
-	                        
-	                        FullHttpResponse response = null;
-	                        
-	                        // forward 	                     	                        	                    	                        
-	                        if(null!=forwardUrl&&(!"default".equals(forwardUrl))){
-	                        	
-	                        	if(forwardUrl.endsWith(".html")){
-	                        		// 返回动态 页面
-	                        			                        		
-	                        		String viewName = forwardUrl.substring(forwardUrl.lastIndexOf("/")+1, forwardUrl.indexOf(".html"));	  
-	                        		String result2 =  ThymeleafUtil.handlerThymeleafPage(viewName,servletRequest,servletResponse);
-		                        	response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,Unpooled.copiedBuffer(result2,CharsetUtil.UTF_8));
-		                            response.headers().set(HttpHeaders.Names.CONTENT_TYPE, "text/html; charset=UTF-8");	                        		
-	                        		
-	                        	}else{
-		                            // forward to action
-			                        servletRequest.setRequestURI(forwardUrl);
-			        	            servletRequest.setServletPath(forwardUrl);			        	           
-			        	
-			                        MockHttpServletResponse servletResponse2 = new MockHttpServletResponse();
-			                        servlet.service(servletRequest, servletResponse2);
-			                    	HttpResponseStatus status2 = HttpResponseStatus.valueOf(servletResponse.getStatus());	                        
-			                        String result2 = servletResponse2.getContentAsString();                        
-			                        result2 = StringUtils.isEmpty(result2)?"":result2;
-			                        response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status2,Unpooled.copiedBuffer(result2,CharsetUtil.UTF_8));
-			                        response.headers().set("Content-Type", "text/json;charset=UTF-8");
-			                        response.headers().set("Content-Length", Integer.valueOf(response.content().readableBytes()));
-	                        	}
-	                        }else if(status.equals(HttpResponseStatus.FOUND)) {
-	                        	//  重定向
-	                        	String newUri = Constants.URL_AHEAD + nettyConfig.getHost()+":"+ nettyConfig.getPort().toString()+servletResponse.getRedirectedUrl();
-	                        	logger.info("newUri:"+newUri);
-	                            response.headers().set(HttpHeaders.Names.LOCATION, newUri);           		                        
-	                        }else {	                        	
-	                        	
-	                        	// 返回 json 数据	                        	
-	                        	response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status,Unpooled.copiedBuffer(result,CharsetUtil.UTF_8));
-	                        	response.headers().set("Content-Type", "text/json;charset=UTF-8");
-	                        	response.headers().set("Content-Length", Integer.valueOf(response.content().readableBytes()));
-	                        }
-	                        		                    	                        
-	                        response.headers().set("Access-Control-Allow-Origin", "*");
-	                        response.headers().set("Access-Control-Allow-Headers", "Content-Type,Content-Length, Authorization, Accept,X-Requested-With,X-File-Name");
-	                        response.headers().set("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS");                       
-	                        response.headers().set("Connection", "keep-alive");
-	                                                                                                             
-	                        ChannelFuture writeFuture = ctx.writeAndFlush(response);
-	                        writeFuture.addListener(ChannelFutureListener.CLOSE);
-	            		} catch (ServletException e) {			
-	            			e.printStackTrace();
-	            		} catch (IOException e) {			
-	            			e.printStackTrace();
-	            		} finally{
-	            			 ReferenceCountUtil.release(fullHttpRequest);
-	            		}
-	        	    	 
-	        	    }
-	        	}, null);	           	         	            
+	        	    public void run() {}
+	        	}, null);
+                **/
+	                      	         	            
 	        }
         }        
     }
@@ -390,7 +372,7 @@ public class HttpProtocolHandler extends SimpleChannelInboundHandler<FullHttpReq
             }
         }
     }
-
+    
     /**
      * 获取client对象：ip+port
      *
@@ -402,19 +384,5 @@ public class HttpProtocolHandler extends SimpleChannelInboundHandler<FullHttpReq
         socketString = ctx.channel().remoteAddress().toString();
         return socketString;
     }
-
-    /**
-     * 获取client的ip
-     *
-     * @param ctx
-     * @return
-     */
-    public String getIPString(ChannelHandlerContext ctx) {
-        String ipString = "";
-        String socketString = ctx.channel().remoteAddress().toString();
-        int colonAt = socketString.indexOf(":");
-        ipString = socketString.substring(1, colonAt);
-        return ipString;
-    }
-    
+  
 }

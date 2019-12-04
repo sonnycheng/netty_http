@@ -12,4 +12,8 @@ public interface Constants {
 	 
 	 public String URL_AHEAD  ="http://";
 	 
+	 public String HOST  = "localhost";
+	 
+	 public String PORT  = "8024";
+	 
 }

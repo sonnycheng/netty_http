@@ -6,6 +6,8 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.util.ReferenceCountUtil;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 
@@ -15,11 +17,19 @@ import org.springframework.stereotype.Component;
  * 在这里可以做拦截器，验证一些请求的合法性
  */
 public class InterceptorHandler extends ChannelInboundHandlerAdapter {
+	
+	private static final Logger logger = LoggerFactory.getLogger(InterceptorHandler.class);
+	
     @Override
     public void channelRead(ChannelHandlerContext context, Object msg)   {
-        if (isPassed((FullHttpRequest) msg)){
-            context.fireChannelRead(msg);
-            return;
+    	
+    	logger.info("InterceptorHandler thread name:"+Thread.currentThread().getName());
+    	
+        if (!isPassed(context, (FullHttpRequest) msg)){         
+            context.pipeline().close();            
+        }else{
+        	context.fireChannelRead(msg);
+        	return;
         }
 
         ReferenceCountUtil.release(msg);
@@ -31,7 +41,29 @@ public class InterceptorHandler extends ChannelInboundHandlerAdapter {
      * @param request
      * @return
      */
-    private boolean isPassed(FullHttpRequest request){
-        return true;
+    private boolean isPassed(ChannelHandlerContext context, FullHttpRequest request){
+    	String visitIp = getIPString(context);
+    	logger.info("visitIp:"+visitIp);
+    	 /**
+    	if("127.0.0.1".equals(visitIp))
+    		return false;
+    	else
+    	**/	
+    	return true;
+    }
+    
+    
+    /**
+     * 获取client的ip
+     *
+     * @param ctx
+     * @return
+     */
+    public String getIPString(ChannelHandlerContext ctx) {
+        String ipString = "";
+        String socketString = ctx.channel().remoteAddress().toString();
+        int colonAt = socketString.indexOf(":");
+        ipString = socketString.substring(1, colonAt);
+        return ipString;
     }
 }

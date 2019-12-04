@@ -22,7 +22,6 @@ public class UserController extends BaseController{
 	public String login(String username,String pwd){
 		
 		logger.info("run into controller login method! ");	
-		logger.info("thread name:"+Thread.currentThread().getName());
 		
 		JSONObject resultJson = new JSONObject();
 		Map<String, String> loginResult = new HashMap<String, String>();
@@ -41,8 +40,7 @@ public class UserController extends BaseController{
 	@ResponseBody
 	public String loginout(String username,String pwd){
 		
-		logger.info("run into controller loginout method! ");
-		logger.info("thread name:"+Thread.currentThread().getName());
+		logger.info("run into controller loginout method! ");		
 		
 		JSONObject resultJson = new JSONObject();
 		Map<String, String> loginResult = new HashMap<String, String>();
