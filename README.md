@@ -1,8 +1,6 @@
 
 
-本项目将 Springboot 运行在 Netty4 上, 完全将 Netty 作为一个接受 http 请求的 web　容器，
-
-##特点：
+本项目将 Springboot 运行在 Netty4 上, 完全将 Netty 作为一个接受 http 请求的 web　容器，特点：
 
 1). 无入侵 SpringBoot 项目原代码；
 
